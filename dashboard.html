@@ -1,0 +1,25 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>body{background:#0b0c10; color:#fff; font-family:monospace; padding:20px;} .card{background:#1f2833; padding:20px; border-radius:8px; border:1px solid #45f3ff;}</style>
+</head>
+<body>
+    <div class="card">
+        <h1>Mayhem Manager</h1>
+        <input type="text" id="mint" value="GbRSuDWPcbbMmtThwXhL3RnFbUnCJtLRiTfFBFjfpump" style="width:100%; padding:10px;">
+        <button onclick="sync()" style="width:100%; padding:10px; margin-top:10px; background:#45f3ff;">FETCH LIVE DATA</button>
+        <div id="out" style="margin-top:20px;"></div>
+    </div>
+    <script>
+        async function sync() {
+            const res = await fetch('/api/recalibrate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({mint: document.getElementById('mint').value})
+            });
+            const data = await res.json();
+            document.getElementById('out').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+    </script>
+</body>
+</html>
