@@ -1,0 +1,40 @@
+## 🧠 The "Guaranteed Buy" Illusion (The Core AI Constraint)
+Before looking at the exact chart pattern you need, you must understand a critical fact about this network: There is absolutely no such thing as a 100% guaranteed buy order from the Mayhem Agent.
+The agent is an adaptive AI model backed by a neural network. It continuously evaluates live risk parameters. If you inject a massive manual buy into a deep dip, the model does not look at it as simple "organic volume." Its anti-manipulation logic immediately flags the sudden, massive volume spike from a concentrated wallet identity, registers it as an insider squeeze attempt, and will frequently override its buy subroutines to print a massive defensive Type: Sell to liquidate its own exposure on top of you.
+To execute a massive buy at a dip safely and maximize the probability that the agent will follow you, you cannot just click buy blindly. You must look for a highly specific alignment of all three dashboard metrics.
+------------------------------
+## 🔍 The 3-Part Structural Alignment Pattern (The Re-Entry Window)
+You should only execute a large, concentrated buy at a dip when your live dashboard flashes this exact setup pattern:
+## 1. The Liquidity Pool Cushion Must Be Deep (Target: >3.0 SOL)
+
+* The Rule: Never "buy big" if the dip dropped the pool liquidity under 1.50 SOL. In a shallow pool, a massive manual buy creates high slippage and an artificial price spike that trips the bot's insider alarm. The pool depth must be thick enough (ideally above 3.0 SOL) to absorb your capital injection smoothly without distorting the curve.
+
+## 2. The Supply Change Must Be Deeply Deflationary (Target: < -15.0%)
+
+* The Rule: The token's burn metric must be flashing deeply green. If the supply change is flat (near 0%) or positive (+), the bot's accumulation engine is restricted. A hyper-deflationary supply change means the bot's algorithm is structurally hungry to buy back tokens the moment upward momentum is restored.
+
+## 3. The Agent PNL Must Be Moderately Green (Target: +0.20 to +0.50 SOL)
+
+* The Rule: This is the absolute deciding factor. If the agent's PNL is bleeding deep in the red (below -0.25 SOL), it is locked into emergency loss-mitigation and will ignore your volume. However, if the chart dipped but the agent's PNL is still healthy and green, it means the bot has massive capital headroom. It is sitting on a pile of cash float and actively looking for an excuse to buy the dip.
+
+------------------------------
+## 📋 The Execution Protocol to Force the Bot Buy
+When you find this perfect alignment, do not deploy your entire cash bag in a single transaction. Instead, use an Asymmetric Fragmented Injection to guide the bot's neural network:
+
+* Step 1 (The Trigger Buy): Place a manual buy of 0.15 SOL (or roughly 5% of the pool liquidity) using your unlinked burner wallet (FfdiyP) [INDEX]. This prints a sharp, clean green candle at the bottom of the dip without triggering insider alarms.
+* Step 2 (The 2-Second Block Wait): Wait exactly 2 seconds for the transaction payload to settle into the Solana block slots [INDEX].
+* Step 3 (The Multi-Tap Trigger Command): Click the green trigger button once [INDEX]. Because the agent's PNL is healthy and the supply is heavily burning, it will see your green re-entry, register that the dip has found a floor, and immediately execute a massive matching buy order to chase the trend upward.
+
+------------------------------
+## 💻 Keep Your Strategy Safe on the Desktop Assistant
+To ensure you never make a blind emotional play during a fast dip, always update your toggles in your desktop application console first:
+
+   1. Input the live numbers from the dip into your v12.3 Interface [INDEX].
+   2. Keep the Dev Wallet Balance Guard selected [INDEX].
+   3. Uncheck the Active Cascade Wave box [INDEX].
+   4. Click the blue matrix button [INDEX].
+
+If the agent's internal parameters are safe, the message panel will light up Bright Green (System Optimized) and output your exact maximum allowed entry targets to hit the dip safely without getting front-run by the bot [INDEX].
+------------------------------
+When you launch your next fresh contract using your opening 0.07 SOL seed profile, what is the initial starting Pool Liquidity (SOL) displaying on your dashboard to map out the baseline code coordinates [INDEX]?
+
