@@ -1,0 +1,17 @@
+# Secret-scanning pre-commit hook. Blocks API keys, tokens, and other
+# credentials from ever entering a commit.
+#
+# One-time activation (per clone):
+#   pip install pre-commit
+#   pre-commit install
+#
+# After that, `git commit` runs gitleaks automatically and aborts the commit if
+# it finds a secret. To scan the whole working tree on demand:
+#   pre-commit run gitleaks --all-files
+#
+# Keep the hook current with:  pre-commit autoupdate
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks

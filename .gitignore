@@ -1,0 +1,13 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+credentials.py
+rpc_config.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/

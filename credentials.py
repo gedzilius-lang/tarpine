@@ -1,1 +1,0 @@
-﻿HELIUS_RPC_URL = "https://mainnet.helius-rpc.com/?api-key=bb01eb11-d973-43e7-9424-837486a259a0"
