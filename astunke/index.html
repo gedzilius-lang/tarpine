@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patas Localhost Dashboard</title>
+  <style>
+    :root {
+      --bg:#0a0f14; --panel:#101720; --panel-2:#151f2b; --line:#233244;
+      --text:#e7eef8; --muted:#8ea2bb; --cyan:#49c9ff; --green:#57d48c;
+      --amber:#f3be4d; --red:#ff6a6a; --purple:#b596ff;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--text); }
+    .wrap { max-width:1200px; margin:0 auto; padding:18px; }
+    .top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
+    .title h1 { margin:0; font-size:24px; color:var(--cyan); }
+    .title p { margin:4px 0 0; color:var(--muted); font-size:14px; }
+    .status { font-family:Consolas,monospace; font-size:12px; color:var(--muted); }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; }
+    .controls { display:grid; grid-template-columns:2fr 120px 120px 120px; gap:12px; margin-bottom:18px; }
+    input, select, button { width:100%; background:var(--panel-2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:11px 12px; }
+    button { cursor:pointer; font-weight:600; }
+    button.primary { background:#143247; border-color:#215678; color:#dff6ff; }
+    button.green { background:#163223; border-color:#245b3c; color:#dbffea; }
+    .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .metric .k { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+    .metric .v { margin-top:8px; font-size:24px; font-weight:700; font-family:Consolas,monospace; }
+    .metric .s { margin-top:4px; font-size:12px; color:var(--muted); }
+    .grid2 { display:grid; grid-template-columns:1.4fr 1fr; gap:12px; margin-bottom:18px; }
+    .subgrid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .head h3 { margin:0; font-size:14px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+    .bar { height:10px; background:#0c131a; border:1px solid var(--line); border-radius:999px; overflow:hidden; }
+    .bar > div { height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--amber),var(--red)); transition:width .4s ease; }
+    .row { display:flex; justify-content:space-between; gap:14px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.04); font-family:Consolas,monospace; font-size:13px; }
+    .row:last-child { border-bottom:none; }
+    .pill { padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+    .wait { background:#203041; color:#b9dfff; }
+    .ready { background:#48381b; color:#ffe09a; }
+    .inject { background:#173526; color:#9ff7c2; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { padding:8px 6px; border-bottom:1px solid rgba(255,255,255,.05); text-align:left; }
+    th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
+    .exec { display:grid; grid-template-columns:1fr 1fr 120px 140px; gap:10px; margin-top:12px; }
+    .log { max-height:220px; overflow:auto; font-family:Consolas,monospace; font-size:12px; }
+    .note { color:var(--muted); font-size:13px; line-height:1.55; }
+    .accent-cyan { color:var(--cyan); } .accent-green { color:var(--green); }
+    .accent-amber { color:var(--amber); } .accent-red { color:var(--red); }
+    @media (max-width: 960px) {
+      .controls, .grid4, .grid2, .subgrid2, .exec { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="title">
+      <h1>Patas Localhost Dashboard</h1>
+      <p>Educational pump.fun bonding-curve monitor for localhost PowerShell usage.</p>
+    </div>
+    <div class="status" id="topStatus">mode: idle</div>
+  </div>
+
+  <div class="panel">
+    <div class="controls">
+      <input id="mintInput" placeholder="Pump.fun mint or URL">
+      <select id="modeSelect">
+        <option value="live">Live</option>
+        <option value="demo">Demo</option>
+      </select>
+      <button class="primary" id="startBtn">Start</button>
+      <button id="stopBtn">Stop</button>
+    </div>
+    <div class="note">This version adapts the original Tarpine / Mayhem ideas: live curve polling, PDA derivation, reserve decoding, tension meter, modulo-based T1/T2 sizing, and a localhost-only execution stub. It is intentionally simple so you can inspect every metric and evolve it safely.</div>
+  </div>
+
+  <div class="grid4" style="margin-top:18px;">
+    <div class="panel metric"><div class="k">Market Cap</div><div class="v" id="mcap">—</div><div class="s" id="mcapSub">—</div></div>
+    <div class="panel metric"><div class="k">Real Liquidity</div><div class="v" id="liq">—</div><div class="s" id="liqUsd">—</div></div>
+    <div class="panel metric"><div class="k">Virtual SOL</div><div class="v" id="vsol">—</div><div class="s">curve depth</div></div>
+    <div class="panel metric"><div class="k">Spot Price</div><div class="v" id="spot">—</div><div class="s" id="symbolLine">—</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="head"><h3>Coiled Spring Matrix</h3><span class="pill wait" id="actionPill">WAIT</span></div>
+      <div style="font-family:Consolas,monospace;font-size:28px;font-weight:700;margin-bottom:10px;" id="tensionPct">0.0%</div>
+      <div class="bar"><div id="tensionBar"></div></div>
+      <div class="subgrid2" style="margin-top:16px;">
+        <div class="panel" style="padding:12px;background:var(--panel-2);"><div class="k">T1 Entry</div><div class="v accent-cyan" id="tier1">0.0000 SOL</div></div>
+        <div class="panel" style="padding:12px;background:var(--panel-2);"><div class="k">T2 Add</div><div class="v accent-amber" id="tier2">0.0000 SOL</div></div>
+      </div>
+      <div style="margin-top:16px;">
+        <div class="head"><h3>Playbook Math</h3></div>
+        <div class="row"><span>r_sol</span><span id="mathRsol">—</span></div>
+        <div class="row"><span>modulo (% 0.0459)</span><span id="mathModulo">—</span></div>
+        <div class="row"><span>base floor</span><span id="mathBase">—</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="head"><h3>Session Feed</h3><span id="feedMeta" class="note">0 buys / 0 sells</span></div>
+      <div class="log">
+        <table>
+          <thead><tr><th>Time</th><th>Type</th><th>Δ SOL</th></tr></thead>
+          <tbody id="feedBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="head"><h3>Execution Stub</h3><span class="note">localhost only</span></div>
+      <div class="note">Buttons calculate the current T1/T2 amount from live liquidity and send it to a backend stub. No real trade is placed yet; this is the safe wiring layer before plugging in Jupiter or your private execution service.</div>
+      <div class="exec">
+        <button class="green" id="buyT1Btn">Buy T1</button>
+        <button class="green" id="buyT2Btn">Buy T2</button>
+        <input id="slippageInput" type="number" step="0.1" value="25" placeholder="slippage">
+        <input id="priorityFeeInput" type="number" step="0.0001" value="0.002" placeholder="priority fee">
+      </div>
+      <div class="panel" style="background:var(--panel-2);margin-top:12px;">
+        <div class="note" id="execStatus">idle</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="head"><h3>Monitor State</h3><span class="note" id="stateMode">idle</span></div>
+      <div class="row"><span>Mint</span><span id="mintLine">—</span></div>
+      <div class="row"><span>Curve PDA</span><span id="curveLine">—</span></div>
+      <div class="row"><span>Token</span><span id="tokenLine">—</span></div>
+      <div class="row"><span>Poll status</span><span id="pollLine">—</span></div>
+      <div class="row"><span>Note</span><span id="noteLine">—</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const els = id => document.getElementById(id);
+
+async function api(path, options={}) {
+  const res = await fetch(path, {
+    headers: {'Content-Type': 'application/json'},
+    ...options
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || data.error || 'request failed');
+  return data;
+}
+
+function fmtUsd(v) {
+  if (v == null || Number.isNaN(v)) return '—';
+  if (v >= 1_000_000) return '$' + (v / 1_000_000).toFixed(2) + 'M';
+  if (v >= 1_000) return '$' + (v / 1_000).toFixed(1) + 'K';
+  return '$' + v.toFixed(2);
+}
+
+function renderFeed(history) {
+  const body = els('feedBody');
+  body.innerHTML = '';
+  if (!history || !history.length) {
+    body.innerHTML = '<tr><td colspan="3" class="note">awaiting events...</td></tr>';
+    return;
+  }
+  [...history].reverse().forEach(item => {
+    const tr = document.createElement('tr');
+    const d = new Date(item.time * 1000);
+    tr.innerHTML = `<td>${d.toLocaleTimeString()}</td><td class="accent-${item.type === 'buy' ? 'green' : 'red'}">${item.type.toUpperCase()}</td><td>${(item.delta_sol || 0).toFixed(4)}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+function renderState(s) {
+  const metrics = s.metrics || {};
+  els('topStatus').textContent = `mode: ${s.mode || 'idle'} | failures: ${s.failure_count || 0}`;
+  els('stateMode').textContent = s.mode || 'idle';
+  els('mcap').textContent = fmtUsd(metrics.mcap_usd || 0);
+  els('mcapSub').textContent = `buys ${metrics.buys_60s || 0} / sells ${metrics.sells_60s || 0} (60s)`;
+  els('liq').textContent = `${(s.r_sol || 0).toFixed(4)} SOL`;
+  els('liqUsd').textContent = fmtUsd(metrics.liquidity_usd || 0);
+  els('vsol').textContent = `${(s.v_sol || 0).toFixed(4)} SOL`;
+  els('spot').textContent = '$' + (metrics.spot_usd || 0).toExponential(4);
+  els('symbolLine').textContent = `${s.symbol || '—'} ${s.name ? '· ' + s.name : ''}`;
+  els('mintLine').textContent = s.mint || '—';
+  els('curveLine').textContent = s.curve || '—';
+  els('tokenLine').textContent = `${s.symbol || '—'} / ${s.name || '—'}`;
+  els('pollLine').textContent = s.last_poll ? new Date(s.last_poll * 1000).toLocaleTimeString() : '—';
+  els('noteLine').textContent = s.note || '—';
+
+  const tension = metrics.tension || 0;
+  els('tensionPct').textContent = (tension * 100).toFixed(1) + '%';
+  els('tensionBar').style.width = (tension * 100) + '%';
+  const actionPill = els('actionPill');
+  actionPill.className = 'pill ' + (tension >= 0.8 ? 'inject' : tension >= 0.45 ? 'ready' : 'wait');
+  actionPill.textContent = tension >= 0.8 ? 'INJECT' : tension >= 0.45 ? 'READY' : 'WAIT';
+
+  const tiers = metrics.tiers || {};
+  els('tier1').textContent = `${(tiers.t1 || 0).toFixed(4)} SOL`;
+  els('tier2').textContent = `${(tiers.t2 || 0).toFixed(4)} SOL`;
+  els('mathRsol').textContent = `${(s.r_sol || 0).toFixed(4)} SOL`;
+  els('mathModulo').textContent = (tiers.modulo || 0).toFixed(6);
+  els('mathBase').textContent = (tiers.base || 0).toFixed(4);
+  els('feedMeta').textContent = `${metrics.buys_60s || 0} buys / ${metrics.sells_60s || 0} sells`;
+  renderFeed(s.trade_history || []);
+}
+
+async function refresh() {
+  try {
+    const s = await api('/api/state');
+    renderState(s);
+  } catch (e) {
+    els('topStatus').textContent = 'backend offline';
+  }
+}
+
+els('startBtn').onclick = async () => {
+  const mint = els('mintInput').value.trim();
+  const mode = els('modeSelect').value;
+  if (!mint) return alert('Enter a mint or pump.fun URL first');
+  await api('/api/monitor/start', {method:'POST', body: JSON.stringify({mint, mode})});
+  refresh();
+};
+
+els('stopBtn').onclick = async () => {
+  await api('/api/monitor/stop', {method:'POST'});
+  refresh();
+};
+
+async function executeTier(tier) {
+  const slippage = parseFloat(els('slippageInput').value || '25');
+  const priorityFee = parseFloat(els('priorityFeeInput').value || '0.002');
+  els('execStatus').textContent = `building ${tier.toUpperCase()} request...`;
+  try {
+    const data = await api('/api/execute/buy', {
+      method:'POST',
+      body: JSON.stringify({tier, slippage, priorityFee, dryRun: true})
+    });
+    const ex = data.execution;
+    els('execStatus').textContent = `${ex.status} | ${ex.tier.toUpperCase()} | ${ex.sol_in.toFixed(4)} SOL | ${ex.message}`;
+  } catch (e) {
+    els('execStatus').textContent = `failed | ${e.message}`;
+  }
+}
+
+els('buyT1Btn').onclick = () => executeTier('t1');
+els('buyT2Btn').onclick = () => executeTier('t2');
+
+setInterval(refresh, 1200);
+refresh();
+</script>
+</body>
+</html>

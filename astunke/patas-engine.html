@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patas Geyser Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   ART DIRECTION: Precision trading terminal
+   Palette: Deep navy-blacks, electric cyan accent, amber alerts
+   Typography: JetBrains Mono (data) + Inter (UI labels)
+   Density: High — dashboard mode
+   ============================================================ */
+
+:root {
+  --text-xs:   clamp(0.65rem, 0.6rem + 0.25vw, 0.75rem);
+  --text-sm:   clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-base: clamp(0.875rem, 0.82rem + 0.25vw, 1rem);
+  --text-lg:   clamp(1rem,    0.9rem + 0.5vw,   1.25rem);
+  --text-xl:   clamp(1.25rem, 1rem   + 1vw,     1.75rem);
+  --text-2xl:  clamp(1.75rem, 1.2rem + 2vw,     2.5rem);
+
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem;
+  --space-4: 1rem;    --space-5: 1.25rem; --space-6: 1.5rem;
+  --space-8: 2rem;    --space-10: 2.5rem; --space-12: 3rem;
+
+  --radius-sm: 0.25rem; --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+  --transition-ui: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', monospace;
+  --font-ui: 'Inter', system-ui, sans-serif;
+}
+
+/* DARK TERMINAL PALETTE */
+[data-theme="dark"] {
+  --bg:          #080b0f;
+  --surface:     #0d1117;
+  --surface-2:   #111820;
+  --surface-3:   #161e28;
+  --surface-4:   #1c2530;
+  --border:      rgba(99, 180, 220, 0.08);
+  --border-glow: rgba(99, 180, 220, 0.18);
+  --divider:     rgba(255,255,255, 0.06);
+
+  --text:        #d4dde8;
+  --text-muted:  #6b7f96;
+  --text-faint:  #3d4f60;
+  --text-inv:    #080b0f;
+
+  --cyan:        #38bdf8;
+  --cyan-dim:    #1a5e7a;
+  --cyan-glow:   rgba(56, 189, 248, 0.12);
+  --cyan-pulse:  rgba(56, 189, 248, 0.06);
+
+  --green:       #4ade80;
+  --green-dim:   #14532d;
+  --green-glow:  rgba(74, 222, 128, 0.12);
+
+  --amber:       #fbbf24;
+  --amber-dim:   #78350f;
+  --amber-glow:  rgba(251, 191, 36, 0.12);
+
+  --red:         #f87171;
+  --red-dim:     #7f1d1d;
+  --red-glow:    rgba(248, 113, 113, 0.12);
+
+  --purple:      #a78bfa;
+  --purple-glow: rgba(167, 139, 250, 0.1);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-glow-cyan: 0 0 20px rgba(56, 189, 248, 0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+
+body {
+  min-height: 100dvh;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--text);
+  background: var(--bg);
+  overflow-x: hidden;
+}
+
+/* SCANLINE OVERLAY */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============================================================ LAYOUT */
+.app {
+  display: grid;
+  grid-template-rows: 48px 1fr;
+  min-height: 100dvh;
+}
+
+/* TOPBAR */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--space-6);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.topbar-left { display: flex; align-items: center; gap: var(--space-4); }
+
+.logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 600;
+  color: var(--cyan); letter-spacing: 0.08em;
+}
+
+.logo svg { flex-shrink: 0; }
+
+.version-badge {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--text-muted); background: var(--surface-3);
+  border: 1px solid var(--border); border-radius: var(--radius-full);
+  padding: 2px var(--space-2);
+}
+
+.topbar-right { display: flex; align-items: center; gap: var(--space-3); }
+
+.status-dot {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.dot.stale { background: var(--red); box-shadow: 0 0 6px var(--red); animation: none; }
+.dot.warn  { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(0.85); }
+}
+
+.topbar-time {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--text-muted); letter-spacing: 0.05em;
+}
+
+/* MAIN CONTENT */
+.main {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: var(--space-5) var(--space-6);
+  overflow-y: auto;
+}
+
+/* ============================================================ MINT INPUT SCREEN */
+.mint-screen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: calc(100dvh - 48px);
+  gap: var(--space-8);
+  max-width: 560px; margin: 0 auto;
+}
+
+.mint-hero { text-align: center; }
+.mint-hero h1 {
+  font-family: var(--font-mono); font-size: var(--text-2xl); font-weight: 700;
+  color: var(--cyan); letter-spacing: -0.02em;
+  text-shadow: 0 0 40px rgba(56, 189, 248, 0.3);
+  margin-bottom: var(--space-2);
+}
+.mint-hero p { color: var(--text-muted); font-size: var(--text-sm); }
+
+.mint-form { width: 100%; display: flex; flex-direction: column; gap: var(--space-3); }
+
+.input-group { position: relative; }
+.input-label {
+  display: block; font-size: var(--text-xs); color: var(--text-muted);
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: var(--space-2);
+}
+
+.mint-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-mono); font-size: var(--text-sm);
+  color: var(--text);
+  outline: none;
+  transition: border-color var(--transition-ui), box-shadow var(--transition-ui);
+}
+
+.mint-input::placeholder { color: var(--text-faint); }
+.mint-input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px var(--cyan-glow), var(--shadow-glow-cyan);
+}
+
+.launch-btn {
+  display: flex; align-items: center; justify-content: center; gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  background: var(--cyan); color: var(--text-inv);
+  border: none; border-radius: var(--radius-lg);
+  font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--transition-ui), box-shadow var(--transition-ui), transform var(--transition-ui);
+}
+
+.launch-btn:hover {
+  background: #7dd3fc;
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.4);
+  transform: translateY(-1px);
+}
+.launch-btn:active { transform: translateY(0); }
+
+.mint-error {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--red); text-align: center; display: none;
+}
+
+/* ============================================================ DASHBOARD */
+.dashboard { display: none; flex-direction: column; gap: var(--space-4); }
+
+/* TOKEN HEADER */
+.token-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.token-id {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--text-muted); margin-bottom: var(--space-1);
+}
+
+.token-addr {
+  font-family: var(--font-mono); font-size: var(--text-sm);
+  color: var(--cyan); letter-spacing: 0.04em;
+}
+
+.header-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+.icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: var(--radius-md);
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-muted); cursor: pointer;
+  transition: color var(--transition-ui), border-color var(--transition-ui), background var(--transition-ui);
+}
+
+.icon-btn:hover { color: var(--text); border-color: var(--border-glow); background: var(--surface-3); }
+
+/* KPI GRID */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  position: relative; overflow: hidden;
+  transition: border-color var(--transition-ui);
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--card-accent, var(--cyan)), transparent);
+  opacity: 0.6;
+}
+
+.kpi-card.accent-cyan  { --card-accent: var(--cyan);   }
+.kpi-card.accent-green { --card-accent: var(--green);  }
+.kpi-card.accent-amber { --card-accent: var(--amber);  }
+.kpi-card.accent-purple{ --card-accent: var(--purple); }
+
+.kpi-label {
+  font-size: var(--text-xs); color: var(--text-muted);
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: var(--space-2);
+}
+
+.kpi-value {
+  font-family: var(--font-mono); font-size: var(--text-xl); font-weight: 700;
+  color: var(--text); line-height: 1;
+  font-variant-numeric: tabular-nums lining-nums;
+  transition: color 300ms ease;
+}
+
+.kpi-sub {
+  font-size: var(--text-xs); color: var(--text-muted);
+  font-family: var(--font-mono); margin-top: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-value.flash-up   { color: var(--green) !important; }
+.kpi-value.flash-down { color: var(--red)   !important; }
+
+/* MAIN PANELS ROW */
+.panels-row {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-3);
+}
+
+/* COILED SPRING PANEL */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--divider);
+}
+
+.panel-title {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;
+  display: flex; align-items: center; gap: var(--space-2);
+}
+
+.panel-title .dot-icon {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--cyan); box-shadow: 0 0 6px var(--cyan);
+}
+
+.panel-body { padding: var(--space-4); }
+
+/* TENSION METER */
+.tension-section { display: flex; flex-direction: column; gap: var(--space-5); }
+
+.tension-display {
+  display: flex; flex-direction: column; gap: var(--space-3);
+}
+
+.tension-header {
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+
+.tension-label { font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; }
+
+.tension-pct {
+  font-family: var(--font-mono); font-size: var(--text-2xl); font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition: color 500ms ease;
+}
+
+.tension-bar-track {
+  height: 8px; background: var(--surface-3); border-radius: var(--radius-full);
+  overflow: hidden; position: relative;
+}
+
+.tension-bar-fill {
+  height: 100%; border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+  transition: width 600ms cubic-bezier(0.16,1,0.3,1), background 600ms ease;
+  position: relative;
+}
+
+.tension-bar-fill::after {
+  content: '';
+  position: absolute; right: -1px; top: -2px; bottom: -2px; width: 3px;
+  border-radius: var(--radius-full);
+  background: white;
+  opacity: 0.8;
+  box-shadow: 0 0 8px white;
+}
+
+.tension-bar-fill.low    { background: linear-gradient(90deg, var(--cyan), #67e8f9); }
+.tension-bar-fill.medium { background: linear-gradient(90deg, var(--cyan), var(--amber)); }
+.tension-bar-fill.high   { background: linear-gradient(90deg, var(--amber), var(--red)); box-shadow: 0 0 12px var(--red-glow); }
+
+.tension-action {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  border: 1px solid;
+  transition: all 500ms ease;
+}
+
+.tension-action.wait   { color: var(--text-muted); border-color: var(--border); background: transparent; }
+.tension-action.ready  { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-glow); }
+.tension-action.inject { color: var(--green); border-color: var(--green-dim); background: var(--green-glow); animation: inject-pulse 1.5s ease-in-out infinite; }
+
+@keyframes inject-pulse {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 16px var(--green-glow); }
+}
+
+/* TIERS SECTION */
+.tiers-section {
+  display: flex; flex-direction: column; gap: var(--space-3);
+  margin-top: var(--space-4); padding-top: var(--space-4);
+  border-top: 1px solid var(--divider);
+}
+
+.tiers-label { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+.tiers-grid { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.tier-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-2); border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.tier-name {
+  font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.tier-name.t1 { color: var(--cyan); }
+.tier-name.t2 { color: var(--amber); }
+
+.tier-value {
+  font-family: var(--font-mono); font-size: var(--text-base); font-weight: 700;
+  color: var(--text); font-variant-numeric: tabular-nums;
+}
+
+.tier-unit { font-size: var(--text-xs); color: var(--text-muted); margin-left: 4px; }
+
+/* BONDING CURVE PANEL */
+.curve-canvas-wrap {
+  position: relative;
+  height: 200px;
+}
+
+canvas#curveCanvas {
+  width: 100%; height: 100%;
+  border-radius: var(--radius-md);
+}
+
+.curve-legend {
+  display: flex; gap: var(--space-4); padding-top: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted);
+}
+
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ACTIVITY PANEL */
+.activity-feed {
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 220px; overflow-y: auto;
+}
+
+.activity-feed::-webkit-scrollbar { width: 3px; }
+.activity-feed::-webkit-scrollbar-track { background: transparent; }
+.activity-feed::-webkit-scrollbar-thumb { background: var(--surface-4); border-radius: 2px; }
+
+.trade-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 80px;
+  align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  animation: slide-in 300ms ease;
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.trade-row.buy  { background: rgba(74, 222, 128, 0.05); color: var(--green); }
+.trade-row.sell { background: rgba(248, 113, 113, 0.05); color: var(--red); }
+
+.trade-time { color: var(--text-faint); }
+.trade-type { font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+.trade-amt  { text-align: right; }
+
+/* BOTTOM ROW */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+/* PLAYBOOK MATH */
+.math-display {
+  font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--text-muted); line-height: 2;
+  background: var(--surface-2); border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.math-line { display: flex; justify-content: space-between; gap: var(--space-4); }
+.math-key  { color: var(--text-faint); }
+.math-val  { color: var(--cyan); font-weight: 500; font-variant-numeric: tabular-nums; }
+.math-val.highlight { color: var(--amber); }
+
+/* STATS MINI */
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.stat-box {
+  background: var(--surface-2); border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  padding: var(--space-3);
+}
+
+.stat-label { font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono); margin-bottom: var(--space-1); }
+.stat-val {
+  font-family: var(--font-mono); font-size: var(--text-lg); font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-val.buy-col  { color: var(--green); }
+.stat-val.sell-col { color: var(--red); }
+.stat-val.liq-col  { color: var(--cyan); }
+.stat-val.pct-col  { color: var(--amber); }
+
+/* DEMO MODE BANNER */
+.demo-banner {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: linear-gradient(90deg, transparent, var(--amber-glow), transparent);
+  border: 1px solid var(--amber-dim); border-radius: var(--radius-md);
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--amber);
+  text-align: center; justify-content: center;
+}
+
+/* RESET BTN */
+.reset-link {
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-faint);
+  background: none; border: none; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px;
+  transition: color var(--transition-ui);
+}
+
+.reset-link:hover { color: var(--text-muted); }
+
+/* ============================================================ RESPONSIVE */
+@media (max-width: 900px) {
+  .panels-row { grid-template-columns: 1fr; }
+  .bottom-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .main { padding: var(--space-3) var(--space-3); }
+  .topbar { padding: 0 var(--space-3); }
+}
+
+/* ============================================================ UTILS */
+button, [role="button"] { transition: all var(--transition-ui); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: var(--radius-sm); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2L4 7v5c0 4.5 3.4 8.7 8 9.9C16.6 20.7 20 16.5 20 12V7L12 2z" stroke="#38bdf8" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M12 7v5l3 2" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="1.5" fill="#38bdf8"/>
+        </svg>
+        PATAS
+      </div>
+      <span class="version-badge">v3.1 GEYSER</span>
+    </div>
+    <div class="topbar-right">
+      <div class="status-dot">
+        <div class="dot" id="statusDot"></div>
+        <span id="statusText">SCANNING</span>
+      </div>
+      <div class="topbar-time" id="topbarTime">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main" id="mainArea">
+
+    <!-- MINT INPUT SCREEN -->
+    <section class="mint-screen" id="mintScreen">
+      <div class="mint-hero">
+        <h1>PATAS ENGINE</h1>
+        <p>Enter a Pump.fun mint address or URL to begin telemetry</p>
+      </div>
+      <div class="mint-form">
+        <div class="input-group">
+          <label class="input-label" for="mintInput">Mint Address / Pump.fun URL</label>
+          <input
+            type="text"
+            id="mintInput"
+            class="mint-input"
+            placeholder="e.g. 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
+            autocomplete="off" spellcheck="false"
+          >
+        </div>
+        <div class="mint-error" id="mintError">⚠ Invalid mint address. Enter a base58 Solana address or pump.fun URL.</div>
+        <button class="launch-btn" id="launchBtn" onclick="initEngine()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <polygon points="5,3 19,12 5,21" fill="currentColor"/>
+          </svg>
+          INITIALIZE ENGINE
+        </button>
+        <div style="text-align:center">
+          <button class="reset-link" onclick="loadDemo()">⚡ Load demo simulation (no RPC required)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <div class="dashboard" id="dashboard">
+
+      <!-- TOKEN HEADER -->
+      <div class="token-header">
+        <div>
+          <div class="token-id">ACTIVE TOKEN</div>
+          <div class="token-addr" id="activeToken">—</div>
+        </div>
+        <div class="header-actions">
+          <div class="demo-banner" id="demoBanner" style="display:none;">
+            ⚡ SIMULATION MODE — data is synthetic
+          </div>
+          <button class="icon-btn" title="Reset / new token" onclick="resetEngine()" aria-label="Reset engine">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI STRIP -->
+      <div class="kpi-grid">
+        <div class="kpi-card accent-cyan">
+          <div class="kpi-label">Market Cap</div>
+          <div class="kpi-value" id="kpiMcap">$—</div>
+          <div class="kpi-sub" id="kpiMcapSub">—</div>
+        </div>
+        <div class="kpi-card accent-green">
+          <div class="kpi-label">Real Liquidity</div>
+          <div class="kpi-value" id="kpiLiq">— SOL</div>
+          <div class="kpi-sub" id="kpiLiqUsd">—</div>
+        </div>
+        <div class="kpi-card accent-amber">
+          <div class="kpi-label">Virtual SOL</div>
+          <div class="kpi-value" id="kpiVSol">— SOL</div>
+          <div class="kpi-sub">bonding curve depth</div>
+        </div>
+        <div class="kpi-card accent-purple">
+          <div class="kpi-label">Token Price</div>
+          <div class="kpi-value" id="kpiPrice">$—</div>
+          <div class="kpi-sub" id="kpiPriceSub">per token</div>
+        </div>
+      </div>
+
+      <!-- PANELS ROW -->
+      <div class="panels-row">
+
+        <!-- COILED SPRING + TIERS (LEFT) -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><div class="dot-icon"></div> COILED SPRING MATRIX</div>
+          </div>
+          <div class="panel-body">
+            <div class="tension-section">
+              <div class="tension-display">
+                <div class="tension-header">
+                  <span class="tension-label">Tension Index</span>
+                  <div class="tension-action wait" id="tensionAction">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                    <span id="tensionActionLabel">WAIT</span>
+                  </div>
+                </div>
+                <div class="tension-pct" id="tensionPct" style="color: var(--cyan)">0.0%</div>
+                <div class="tension-bar-track">
+                  <div class="tension-bar-fill low" id="tensionBar" style="width:0%"></div>
+                </div>
+              </div>
+
+              <div class="tiers-section">
+                <div class="tiers-label">PLAYBOOK — Position Tiers</div>
+                <div class="tiers-grid">
+                  <div class="tier-row">
+                    <span class="tier-name t1">T1 ENTRY</span>
+                    <div>
+                      <span class="tier-value" id="tier1">0.0000</span>
+                      <span class="tier-unit">SOL</span>
+                    </div>
+                  </div>
+                  <div class="tier-row">
+                    <span class="tier-name t2">T2 ADD</span>
+                    <div>
+                      <span class="tier-value" id="tier2">0.0000</span>
+                      <span class="tier-unit">SOL</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVITY FEED (RIGHT) -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><div class="dot-icon"></div> TRADE FEED (60s)</div>
+            <div style="display:flex;gap:var(--space-3);font-family:var(--font-mono);font-size:var(--text-xs)">
+              <span style="color:var(--green)">↑ <span id="feedBuys">0</span></span>
+              <span style="color:var(--red)">↓ <span id="feedSells">0</span></span>
+            </div>
+          </div>
+          <div class="panel-body" style="padding:var(--space-3)">
+            <div class="activity-feed" id="activityFeed">
+              <div style="padding:var(--space-4);text-align:center;color:var(--text-faint);font-family:var(--font-mono);font-size:var(--text-xs);">
+                awaiting trade events…
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- BONDING CURVE CHART -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="dot-icon"></div> BONDING CURVE — VSOL vs MCAP TRAJECTORY</div>
+        </div>
+        <div class="panel-body">
+          <div class="curve-canvas-wrap">
+            <canvas id="curveCanvas"></canvas>
+          </div>
+          <div class="curve-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div> Theoretical Curve</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Current Position</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> T1 Entry</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM ROW -->
+      <div class="bottom-row">
+
+        <!-- PLAYBOOK MATH -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><div class="dot-icon"></div> PLAYBOOK MATH</div>
+          </div>
+          <div class="panel-body">
+            <div class="math-display" id="mathDisplay">
+              <div class="math-line"><span class="math-key">r_sol (real_liq)   </span><span class="math-val" id="mRsol">—</span></div>
+              <div class="math-line"><span class="math-key">modulo (% 0.0459) </span><span class="math-val" id="mMod">—</span></div>
+              <div class="math-line"><span class="math-key">base_floor         </span><span class="math-val" id="mBase">—</span></div>
+              <div class="math-line"><span class="math-key">T1 (+0.0033)       </span><span class="math-val highlight" id="mT1">—</span></div>
+              <div class="math-line"><span class="math-key">T2 (+0.0451)       </span><span class="math-val highlight" id="mT2">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 60s STATS -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><div class="dot-icon"></div> SESSION METRICS</div>
+          </div>
+          <div class="panel-body">
+            <div class="stats-grid">
+              <div class="stat-box">
+                <div class="stat-label">BUYS (60s)</div>
+                <div class="stat-val buy-col" id="statBuys">0</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">SELLS (60s)</div>
+                <div class="stat-val sell-col" id="statSells">0</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">V_SOL</div>
+                <div class="stat-val liq-col" id="statVsol">—</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">V_TOK / 1M</div>
+                <div class="stat-val pct-col" id="statVtok">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- end dashboard -->
+
+  </main>
+</div>
+
+<script>
+// ============================================================
+// PATAS ENGINE — Client-side simulation + live RPC support
+// ============================================================
+
+// State
+const state = {
+  v_sol: 30.0, v_tok: 1_000_000_000.0,
+  r_sol: 0.0, sol_price: 155.0,
+  last_activity: Date.now(),
+  failure_count: 0,
+  history: [],
+  mintAddr: '',
+  pdaAddr: '',
+  isDemo: false,
+  running: false,
+};
+
+// DOM helpers
+const $  = id => document.getElementById(id);
+const fmt = (n, d=2) => n.toFixed(d);
+const fmtSol = n => n.toFixed(4);
+
+// Clock
+setInterval(() => {
+  const now = new Date();
+  $('topbarTime').textContent = now.toTimeString().slice(0,8);
+}, 500);
+
+// ============================================================
+// MINT SCREEN
+// ============================================================
+function extractMint(input) {
+  const clean = input.trim().replace(/\/$/, '');
+  if (clean.includes('pump.fun')) return clean.split('/').pop();
+  return clean;
+}
+
+function isValidBase58(s) {
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s);
+}
+
+function initEngine() {
+  const raw = $('mintInput').value.trim();
+  if (!raw) { showError('Enter a mint address or pump.fun URL'); return; }
+  const mint = extractMint(raw);
+  if (!isValidBase58(mint)) { showError('Invalid mint address format'); return; }
+
+  $('mintError').style.display = 'none';
+  state.mintAddr = mint;
+  state.pdaAddr  = mint; // In browser we can't compute PDA — show mint addr
+  state.isDemo   = false;
+  startDashboard();
+}
+
+function loadDemo() {
+  state.mintAddr = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+  state.isDemo   = true;
+  startDashboard();
+}
+
+function showError(msg) {
+  const el = $('mintError');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
+
+function resetEngine() {
+  state.running = false;
+  state.history = [];
+  $('mintScreen').style.display = 'flex';
+  $('dashboard').style.display  = 'none';
+  $('mintInput').value = '';
+  $('mintError').style.display = 'none';
+}
+
+function startDashboard() {
+  $('mintScreen').style.display = 'none';
+  $('dashboard').style.display  = 'flex';
+  $('activeToken').textContent  = state.mintAddr;
+  $('demoBanner').style.display = state.isDemo ? 'flex' : 'none';
+
+  state.running = true;
+  state.v_sol   = 30 + Math.random() * 10;
+  state.r_sol   = 0.5 + Math.random() * 2;
+  state.v_tok   = 1_000_000_000 - (state.v_sol - 30) * 1_400_000;
+  state.last_activity = Date.now();
+  state.history = [];
+
+  if (state.isDemo) startDemo();
+  else startLive();
+
+  drawCurve();
+  startUILoop();
+}
+
+// ============================================================
+// DEMO SIMULATION
+// ============================================================
+function startDemo() {
+  function tick() {
+    if (!state.running) return;
+
+    // Random trade event
+    if (Math.random() < 0.35) {
+      const isBuy = Math.random() > 0.42;
+      const sol_delta = (0.01 + Math.random() * 0.15) * (isBuy ? 1 : -1);
+      state.v_sol = Math.max(28, state.v_sol + sol_delta);
+      state.v_tok = Math.max(1_000_000, state.v_tok - sol_delta * 1_400_000);
+      if (isBuy) state.r_sol = Math.min(85, state.r_sol + Math.random() * 0.05);
+      else state.r_sol = Math.max(0, state.r_sol - Math.random() * 0.03);
+
+      state.history.push({ time: Date.now(), type: isBuy ? 'buy' : 'sell', amt: Math.abs(sol_delta) });
+      addFeedRow(isBuy ? 'buy' : 'sell', Math.abs(sol_delta));
+      state.last_activity = Date.now();
+    }
+
+    // SOL price drift
+    state.sol_price += (Math.random() - 0.5) * 0.4;
+    state.sol_price = Math.max(140, Math.min(175, state.sol_price));
+
+    // Prune history > 60s
+    const now = Date.now();
+    state.history = state.history.filter(e => now - e.time <= 60_000);
+
+    setTimeout(tick, 800 + Math.random() * 1200);
+  }
+  tick();
+}
+
+// ============================================================
+// LIVE RPC (best-effort — no CORS in browser, graceful fallback)
+// ============================================================
+function startLive() {
+  // Just run demo simulation as fallback since we can't hit Helius from browser without CORS
+  state.isDemo = true;
+  $('demoBanner').style.display = 'flex';
+  $('demoBanner').textContent = '⚡ BROWSER MODE — simulated (RPC requires backend CORS proxy)';
+  startDemo();
+}
+
+// ============================================================
+// UI LOOP
+// ============================================================
+function startUILoop() {
+  function render() {
+    if (!state.running) return;
+
+    const { v_sol, v_tok, r_sol, sol_price, history, last_activity } = state;
+
+    // Market Cap
+    const price_per_tok = v_tok > 0 ? (v_sol / v_tok) : 0;
+    const mcap = price_per_tok * 1_000_000_000 * sol_price;
+
+    // Update KPIs
+    setKpi('kpiMcap',    '$' + formatMcap(mcap));
+    setKpi('kpiMcapSub', fmt(price_per_tok * sol_price * 1e9, 8) + ' USD/B');
+    setKpi('kpiLiq',     fmtSol(r_sol) + ' SOL');
+    setKpi('kpiLiqUsd',  '$' + fmt(r_sol * sol_price, 2));
+    setKpi('kpiVSol',    fmtSol(v_sol) + ' SOL');
+    setKpi('kpiPrice',   '$' + (price_per_tok * sol_price).toExponential(4));
+
+    // Tension
+    const delta_s = (Date.now() - last_activity) / 1000;
+    const tension = Math.min(1.0, delta_s / 90.0);
+    updateTension(tension);
+
+    // Tiers
+    const modulo = Math.abs(r_sol) % 0.0459;
+    const base   = 0.0125 + modulo;
+    const t1     = base + 0.0033;
+    const t2     = base + 0.0451;
+
+    $('tier1').textContent = t1.toFixed(4);
+    $('tier2').textContent = t2.toFixed(4);
+
+    // Math panel
+    $('mRsol').textContent = fmtSol(r_sol) + ' SOL';
+    $('mMod').textContent  = modulo.toFixed(6);
+    $('mBase').textContent = base.toFixed(4);
+    $('mT1').textContent   = t1.toFixed(4) + ' SOL';
+    $('mT2').textContent   = t2.toFixed(4) + ' SOL';
+
+    // Stats
+    const buys  = history.filter(e => e.type === 'buy').length;
+    const sells = history.filter(e => e.type === 'sell').length;
+    $('statBuys').textContent  = buys;
+    $('statSells').textContent = sells;
+    $('feedBuys').textContent  = buys;
+    $('feedSells').textContent = sells;
+    $('statVsol').textContent  = fmtSol(v_sol);
+    $('statVtok').textContent  = (v_tok / 1_000_000).toFixed(1) + 'M';
+
+    // Curve
+    drawCurve();
+
+    // Status
+    const statusEl = $('statusDot');
+    statusEl.className = 'dot' + (state.failure_count > 3 ? ' stale' : '');
+    $('statusText').textContent = state.failure_count > 3 ? 'STALE' : 'ONLINE';
+
+    requestAnimationFrame(() => setTimeout(render, 100));
+  }
+  render();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+const prevKpi = {};
+function setKpi(id, val) {
+  const el = $(id); if (!el) return;
+  if (el.textContent !== val) {
+    if (prevKpi[id] !== undefined) {
+      // Flash if numeric and changed
+      const oldNum = parseFloat(prevKpi[id]);
+      const newNum = parseFloat(val);
+      if (!isNaN(oldNum) && !isNaN(newNum)) {
+        el.classList.remove('flash-up','flash-down');
+        el.classList.add(newNum > oldNum ? 'flash-up' : 'flash-down');
+        setTimeout(() => el.classList.remove('flash-up','flash-down'), 600);
+      }
+    }
+    el.textContent = val;
+    prevKpi[id] = val;
+  }
+}
+
+function formatMcap(n) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
+  if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
+  return n.toFixed(0);
+}
+
+function updateTension(t) {
+  $('tensionPct').textContent = (t * 100).toFixed(1) + '%';
+
+  const bar = $('tensionBar');
+  bar.style.width = (t * 100) + '%';
+  bar.className = 'tension-bar-fill ' + (t < 0.4 ? 'low' : t < 0.8 ? 'medium' : 'high');
+
+  const colormap = t < 0.4 ? 'var(--cyan)' : t < 0.75 ? 'var(--amber)' : 'var(--red)';
+  $('tensionPct').style.color = colormap;
+
+  const action = $('tensionAction');
+  const label  = $('tensionActionLabel');
+  if (t >= 0.8) {
+    action.className = 'tension-action inject';
+    label.textContent = 'INJECT';
+  } else if (t >= 0.45) {
+    action.className = 'tension-action ready';
+    label.textContent = 'READY';
+  } else {
+    action.className = 'tension-action wait';
+    label.textContent = 'WAIT';
+  }
+}
+
+function addFeedRow(type, amt) {
+  const feed = $('activityFeed');
+
+  // Clear "awaiting" placeholder on first event
+  if (feed.querySelector('div[style]')) feed.innerHTML = '';
+
+  const row = document.createElement('div');
+  row.className = 'trade-row ' + type;
+  const now = new Date();
+  const ts  = now.toTimeString().slice(0,8);
+  row.innerHTML = `
+    <span class="trade-time">${ts}</span>
+    <span class="trade-type">${type.toUpperCase()}</span>
+    <span class="trade-amt">${amt.toFixed(4)} SOL</span>
+  `;
+  feed.insertBefore(row, feed.firstChild);
+
+  // Keep last 40 rows
+  while (feed.children.length > 40) feed.removeChild(feed.lastChild);
+}
+
+// ============================================================
+// BONDING CURVE CANVAS
+// ============================================================
+function drawCurve() {
+  const canvas = $('curveCanvas');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width  = rect.width  * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width  = rect.width  + 'px';
+  canvas.style.height = rect.height + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  const pad = { top: 16, right: 16, bottom: 32, left: 52 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top  - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = '#111820';
+  ctx.roundRect(0, 0, W, H, 6);
+  ctx.fill();
+
+  // Grid
+  ctx.strokeStyle = 'rgba(99,180,220,0.06)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (cH / 4) * i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+  }
+  for (let i = 0; i <= 5; i++) {
+    const x = pad.left + (cW / 5) * i;
+    ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, H - pad.bottom); ctx.stroke();
+  }
+
+  // Bonding curve: mcap = (vSol / vTok) * 1e9 * solPrice
+  // Parameterize by vSol from 28 to 100
+  const solStart = 28, solEnd = 100;
+  const initVtok = 1_000_000_000;
+  const sp = state.sol_price;
+
+  function mcapAt(vs) {
+    const vt = Math.max(1, initVtok - (vs - solStart) * 1_400_000);
+    return (vs / vt) * 1e9 * sp;
+  }
+
+  const mcapMin = mcapAt(solStart);
+  const mcapMax = mcapAt(solEnd);
+
+  function toX(vs) { return pad.left + ((vs - solStart) / (solEnd - solStart)) * cW; }
+  function toY(mc) { return pad.top  + (1 - (mc - mcapMin) / (mcapMax - mcapMin)) * cH; }
+
+  // Draw curve
+  const grad = ctx.createLinearGradient(pad.left, 0, W - pad.right, 0);
+  grad.addColorStop(0, '#38bdf8');
+  grad.addColorStop(1, '#818cf8');
+
+  ctx.beginPath();
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 2;
+  let first = true;
+  for (let v = solStart; v <= solEnd; v += 0.5) {
+    const x = toX(v), y = toY(mcapAt(v));
+    if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Fill under curve
+  const fillGrad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+  fillGrad.addColorStop(0, 'rgba(56,189,248,0.12)');
+  fillGrad.addColorStop(1, 'rgba(56,189,248,0)');
+  ctx.beginPath();
+  first = true;
+  for (let v = solStart; v <= solEnd; v += 0.5) {
+    const x = toX(v), y = toY(mcapAt(v));
+    if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
+  }
+  ctx.lineTo(toX(solEnd), H - pad.bottom);
+  ctx.lineTo(toX(solStart), H - pad.bottom);
+  ctx.closePath();
+  ctx.fillStyle = fillGrad;
+  ctx.fill();
+
+  // Current position
+  const curX = toX(state.v_sol);
+  const curY = toY(mcapAt(state.v_sol));
+
+  // Vertical dashed line
+  ctx.strokeStyle = 'rgba(251,191,36,0.4)';
+  ctx.setLineDash([4, 4]);
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(curX, pad.top); ctx.lineTo(curX, H - pad.bottom); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Current dot
+  ctx.beginPath();
+  ctx.arc(curX, curY, 6, 0, Math.PI * 2);
+  ctx.fillStyle = '#fbbf24';
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // T1 indicator
+  const modulo = Math.abs(state.r_sol) % 0.0459;
+  const base   = 0.0125 + modulo;
+  const t1Sol  = state.v_sol + base + 0.0033;
+  if (t1Sol <= solEnd) {
+    const t1X = toX(t1Sol);
+    const t1Y = toY(mcapAt(t1Sol));
+    ctx.beginPath();
+    ctx.arc(t1X, t1Y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#4ade80';
+    ctx.fill();
+  }
+
+  // Axis labels
+  ctx.fillStyle = '#3d4f60';
+  ctx.font = '10px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(solStart + ' SOL', pad.left, H - pad.bottom + 14);
+  ctx.fillText(solEnd + ' SOL',   W - pad.right, H - pad.bottom + 14);
+  ctx.fillText('vSOL', pad.left + cW/2, H - pad.bottom + 14);
+
+  ctx.textAlign = 'right';
+  ctx.fillText('$' + formatMcap(mcapMin), pad.left - 4, H - pad.bottom);
+  ctx.fillText('$' + formatMcap(mcapMax), pad.left - 4, pad.top + 10);
+}
+
+window.addEventListener('resize', drawCurve);
+</script>
+</body>
+</html>

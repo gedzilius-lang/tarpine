@@ -1,0 +1,8 @@
+{
+  "Network": {
+    "HeliusRpcBaseUrl": "https://mainnet.helius-rpc.com",
+    "HeliusApiKey": "PASTE_HELIUS_KEY"
+  },
+  "Position": {},
+  "Strategy": {}
+}
